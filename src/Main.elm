@@ -47,7 +47,7 @@ init _ =
 
 type Msg
     = SearchInput String
-    | PerformSearch Int
+    | PerformSearch
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -56,13 +56,8 @@ update msg model =
         SearchInput searchTerm ->
             ( { model | searchTerm = searchTerm }, Cmd.none )
 
-        PerformSearch key ->
-            case key of
-                13 ->
-                    ( model, Cmd.none )
-
-                _ ->
-                    ( model, Cmd.none )
+        PerformSearch ->
+            ( model, Cmd.none )
 
 
 
@@ -88,7 +83,7 @@ view model =
                 [ placeholder "Search"
                 , value model.searchTerm
                 , onInput SearchInput
-                , onKeyUp PerformSearch
+                , onEnterKey PerformSearch
                 ]
                 []
             ]
@@ -100,6 +95,19 @@ view model =
 -- EVENTS
 
 
-onKeyUp : (Int -> msg) -> Attribute msg
-onKeyUp tagger =
-    on "keyup" (Json.Decode.map tagger keyCode)
+onEnterKey : msg -> Attribute msg
+onEnterKey message =
+    on "keyup"
+        (keyCode
+            |> Json.Decode.andThen (enterKeyDecoder message)
+        )
+
+
+enterKeyDecoder : msg -> Int -> Json.Decode.Decoder msg
+enterKeyDecoder message keycode =
+    case keycode of
+        13 ->
+            Json.Decode.succeed message
+
+        _ ->
+            Json.Decode.fail "Not enter key"
