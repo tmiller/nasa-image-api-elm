@@ -4,7 +4,10 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (keyCode, on, onInput)
+import Http
 import Json.Decode
+import RemoteData
+import Url.Builder
 
 
 
@@ -27,12 +30,14 @@ main =
 
 type alias Model =
     { searchTerm : Maybe String
+    , images : RemoteData.WebData (List (List String))
     }
 
 
 initModel : Model
 initModel =
     { searchTerm = Nothing
+    , images = RemoteData.NotAsked
     }
 
 
@@ -48,6 +53,7 @@ init _ =
 type Msg
     = SearchInput String
     | PerformSearch
+    | SearchResponse (RemoteData.WebData (List (List String)))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -57,7 +63,10 @@ update msg model =
             ( { model | searchTerm = Just searchTerm }, Cmd.none )
 
         PerformSearch ->
-            ( model, Cmd.none )
+            ( model, getSearchResults model.searchTerm )
+
+        SearchResponse results ->
+            ( { model | images = results }, Cmd.none )
 
 
 
@@ -111,3 +120,42 @@ enterKeyDecoder message keycode =
 
         _ ->
             Json.Decode.fail "Not enter key"
+
+
+
+-- JSON
+
+
+collectionDecoder : Json.Decode.Decoder (List (List String))
+collectionDecoder =
+    Json.Decode.at [ "collection", "items" ] (Json.Decode.list linksDecoder)
+
+
+linksDecoder : Json.Decode.Decoder (List String)
+linksDecoder =
+    Json.Decode.field "links" (Json.Decode.list hrefDecoder)
+
+
+hrefDecoder : Json.Decode.Decoder String
+hrefDecoder =
+    Json.Decode.field "href" Json.Decode.string
+
+
+
+-- HTTP
+
+
+nasaImageApiUrl : Maybe String -> String
+nasaImageApiUrl searchTerm =
+    Url.Builder.crossOrigin "https://images-api.nasa.gov"
+        [ "search" ]
+        [ Url.Builder.string "q" (Maybe.withDefault "" searchTerm)
+        , Url.Builder.string "media_type" "image"
+        ]
+
+
+getSearchResults : Maybe String -> Cmd Msg
+getSearchResults searchTerm =
+    Http.get (nasaImageApiUrl searchTerm) collectionDecoder
+        |> RemoteData.sendRequest
+        |> Cmd.map SearchResponse
