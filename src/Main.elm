@@ -30,14 +30,14 @@ main =
 
 type alias Model =
     { searchTerm : Maybe String
-    , images : RemoteData.WebData (List String)
+    , imagesResult : RemoteData.WebData (List String)
     }
 
 
 initModel : Model
 initModel =
     { searchTerm = Nothing
-    , images = RemoteData.NotAsked
+    , imagesResult = RemoteData.NotAsked
     }
 
 
@@ -66,7 +66,7 @@ update msg model =
             ( model, getSearchResults model.searchTerm )
 
         SearchResponse results ->
-            ( { model | images = results }, Cmd.none )
+            ( { model | imagesResult = results }, Cmd.none )
 
 
 
@@ -95,9 +95,33 @@ view model =
                 , onEnterKey PerformSearch
                 ]
                 []
+            , searchResultsView model.imagesResult
             ]
         ]
     }
+
+
+searchResultsView : RemoteData.WebData (List String) -> Html msg
+searchResultsView imagesResult =
+    case imagesResult of
+        RemoteData.NotAsked ->
+            div [] []
+
+        RemoteData.Loading ->
+            img [ src "https://cdn-images-1.medium.com/max/1600/1*9EBHIOzhE1XfMYoKz1JcsQ.gif" ] []
+
+        RemoteData.Failure error ->
+            span [] [ text "Please forgive us, we broke something." ]
+
+        RemoteData.Success images ->
+            ul [] (List.map imageView images)
+
+
+imageView : String -> Html msg
+imageView imageUrl =
+    li []
+        [ img [ src imageUrl ] []
+        ]
 
 
 
@@ -158,4 +182,4 @@ getSearchResults : Maybe String -> Cmd Msg
 getSearchResults searchTerm =
     Http.get (nasaImageApiUrl searchTerm) collectionDecoder
         |> RemoteData.sendRequest
-        |> Cmd.map ((RemoteData.map List.concat) >> SearchResponse)
+        |> Cmd.map (RemoteData.map List.concat >> SearchResponse)
