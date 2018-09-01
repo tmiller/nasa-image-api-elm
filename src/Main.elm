@@ -1,8 +1,11 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onInput)
+
+
 
 -- MAIN
 
@@ -22,13 +25,14 @@ main =
 
 
 type alias Model =
-    {
+    { searchTerm : String
     }
 
 
 initModel : Model
-initModel = 
-    {}
+initModel =
+    { searchTerm = ""
+    }
 
 
 init : () -> ( Model, Cmd Msg )
@@ -41,14 +45,14 @@ init _ =
 
 
 type Msg
-    = NoOp
+    = SearchInput String
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            (model, Cmd.none)
-          
+        SearchInput searchTerm ->
+            ( { model | searchTerm = searchTerm }, Cmd.none )
 
 
 
@@ -67,7 +71,10 @@ subscriptions _ =
 view : Model -> Browser.Document Msg
 view model =
     { title = "Nasa Image Search"
-    , body = [
-        h1 [] [text "Hello World"]
-    ]
+    , body =
+        [ h1 [] [ text "Nasa Image Search" ]
+        , section []
+            [ input [ placeholder "Search", onInput SearchInput ] []
+            ]
+        ]
     }
