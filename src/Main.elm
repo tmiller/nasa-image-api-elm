@@ -3,7 +3,8 @@ module Main exposing (main)
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
+import Html.Events exposing (keyCode, on, onInput)
+import Json.Decode
 
 
 
@@ -46,6 +47,7 @@ init _ =
 
 type Msg
     = SearchInput String
+    | PerformSearch Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -53,6 +55,14 @@ update msg model =
     case msg of
         SearchInput searchTerm ->
             ( { model | searchTerm = searchTerm }, Cmd.none )
+
+        PerformSearch key ->
+            case key of
+                13 ->
+                    ( model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
 
 
 
@@ -74,7 +84,22 @@ view model =
     , body =
         [ h1 [] [ text "Nasa Image Search" ]
         , section []
-            [ input [ placeholder "Search", onInput SearchInput ] []
+            [ input
+                [ placeholder "Search"
+                , value model.searchTerm
+                , onInput SearchInput
+                , onKeyUp PerformSearch
+                ]
+                []
             ]
         ]
     }
+
+
+
+-- EVENTS
+
+
+onKeyUp : (Int -> msg) -> Attribute msg
+onKeyUp tagger =
+    on "keyup" (Json.Decode.map tagger keyCode)
