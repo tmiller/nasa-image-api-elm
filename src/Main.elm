@@ -53,7 +53,7 @@ init _ =
 type Msg
     = SearchInput String
     | PerformSearch
-    | SearchResponse (RemoteData.WebData (List (List String)))
+    | SearchResponse (RemoteData.WebData (List String))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -66,7 +66,7 @@ update msg model =
             ( model, getSearchResults model.searchTerm )
 
         SearchResponse results ->
-            ( { model | images = results |> RemoteData.map List.concat }, Cmd.none )
+            ( { model | images = results }, Cmd.none )
 
 
 
@@ -158,4 +158,4 @@ getSearchResults : Maybe String -> Cmd Msg
 getSearchResults searchTerm =
     Http.get (nasaImageApiUrl searchTerm) collectionDecoder
         |> RemoteData.sendRequest
-        |> Cmd.map SearchResponse
+        |> Cmd.map ((RemoteData.map List.concat) >> SearchResponse)
