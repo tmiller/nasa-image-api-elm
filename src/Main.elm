@@ -30,7 +30,7 @@ main =
 
 type alias Model =
     { searchTerm : Maybe String
-    , images : RemoteData.WebData (List (List String))
+    , images : RemoteData.WebData (List String)
     }
 
 
@@ -66,7 +66,7 @@ update msg model =
             ( model, getSearchResults model.searchTerm )
 
         SearchResponse results ->
-            ( { model | images = results }, Cmd.none )
+            ( { model | images = results |> RemoteData.map List.concat }, Cmd.none )
 
 
 
