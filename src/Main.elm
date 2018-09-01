@@ -26,13 +26,13 @@ main =
 
 
 type alias Model =
-    { searchTerm : String
+    { searchTerm : Maybe String
     }
 
 
 initModel : Model
 initModel =
-    { searchTerm = ""
+    { searchTerm = Nothing
     }
 
 
@@ -54,7 +54,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SearchInput searchTerm ->
-            ( { model | searchTerm = searchTerm }, Cmd.none )
+            ( { model | searchTerm = Just searchTerm }, Cmd.none )
 
         PerformSearch ->
             ( model, Cmd.none )
@@ -81,7 +81,7 @@ view model =
         , section []
             [ input
                 [ placeholder "Search"
-                , value model.searchTerm
+                , value (Maybe.withDefault "" model.searchTerm)
                 , onInput SearchInput
                 , onEnterKey PerformSearch
                 ]
