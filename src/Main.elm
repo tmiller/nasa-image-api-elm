@@ -63,7 +63,7 @@ update msg model =
             ( { model | searchTerm = Just searchTerm }, Cmd.none )
 
         PerformSearch ->
-            ( model, getSearchResults model.searchTerm )
+            ( { model | imagesResult = RemoteData.Loading }, getSearchResults model.searchTerm )
 
         SearchResponse results ->
             ( { model | imagesResult = results }, Cmd.none )
